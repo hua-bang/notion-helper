@@ -1,10 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { Client } from '@notionhq/client';
 import { CreateTodoDto } from './dto/create-todo.dto';
+import { CreateBillDto } from './dto/create-bill.dto';
 
 @Injectable()
 export class NotionService {
   private notionClient: Client;
+  private readonly notionTodoDatabaseId = process.env.NOTION_TODO_DATABASE_ID;
+  private readonly notionBillDatabaseId = process.env.NOTION_BILL_DATABASE_ID;
 
   constructor() {
     this.notionClient = new Client({
@@ -14,7 +17,7 @@ export class NotionService {
 
   getTodoList() {
     return this.notionClient.databases.query({
-      database_id: process.env.NOTION_TODO_DATABASE_ID,
+      database_id: this.notionTodoDatabaseId,
     });
   }
 
@@ -55,7 +58,73 @@ export class NotionService {
 
     return this.notionClient.pages.create({
       parent: {
-        database_id: process.env.NOTION_TODO_DATABASE_ID,
+        database_id: this.notionTodoDatabaseId,
+      },
+      properties: properties,
+    });
+  }
+
+  getBillList() {
+    return this.notionClient.databases.query({
+      database_id: this.notionBillDatabaseId,
+    });
+  }
+
+  addBillRecord(bill: CreateBillDto) {
+    const { name, method, type, description, isInput } = bill;
+
+    const typeArr = type.map((item) => {
+      return {
+        name: item,
+      };
+    });
+    const properties: Record<string, any> = {
+      Name: {
+        title: [
+          {
+            text: { content: name, link: null },
+            plain_text: name,
+          },
+        ],
+      },
+      Method: {
+        type: 'multi_select',
+        multi_select: [
+          {
+            name: method,
+          },
+        ],
+      },
+      Type: {
+        type: 'multi_select',
+        multi_select: typeArr,
+      },
+      Amount: {
+        type: 'number',
+        number: 39,
+      },
+      '支出/收入': {
+        type: 'select',
+        select: {
+          name: isInput ? '收入' : '支出',
+        },
+      },
+    };
+
+    if (description) {
+      properties.description = {
+        rich_text: [
+          {
+            text: { content: description, link: null },
+            plain_text: description,
+          },
+        ],
+      };
+    }
+
+    return this.notionClient.pages.create({
+      parent: {
+        database_id: this.notionBillDatabaseId,
       },
       properties: properties,
     });
