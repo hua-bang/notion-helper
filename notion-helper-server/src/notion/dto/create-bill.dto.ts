@@ -8,7 +8,7 @@ export class CreateBillDto {
   method: string;
 
   @IsNotEmpty()
-  type: string[];
+  type: string[] | string;
 
   @IsNotEmpty()
   @IsNumber()

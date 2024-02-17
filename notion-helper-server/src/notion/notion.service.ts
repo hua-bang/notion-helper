@@ -73,7 +73,9 @@ export class NotionService {
   addBillRecord(bill: CreateBillDto) {
     const { name, method, type, description, isInput, amount } = bill;
 
-    const typeArr = type.map((item) => {
+    const formattedType = Array.isArray(type) ? type : type.split(' ');
+
+    const typeArr = formattedType.map((item) => {
       return {
         name: item,
       };
