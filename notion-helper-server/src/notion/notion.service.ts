@@ -71,7 +71,7 @@ export class NotionService {
   }
 
   addBillRecord(bill: CreateBillDto) {
-    const { name, method, type, description, isInput } = bill;
+    const { name, method, type, description, isInput, amount } = bill;
 
     const typeArr = type.map((item) => {
       return {
@@ -101,7 +101,7 @@ export class NotionService {
       },
       Amount: {
         type: 'number',
-        number: 39,
+        number: amount,
       },
       '支出/收入': {
         type: 'select',
