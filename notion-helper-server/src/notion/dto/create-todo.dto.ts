@@ -5,7 +5,7 @@ export class CreateTodoDto {
   name: string;
 
   @IsNotEmpty()
-  tags: string[];
+  tags: string[] | string;
 
   @IsString()
   description: string;

@@ -24,7 +24,9 @@ export class NotionService {
   addTodo(todo: CreateTodoDto) {
     const { name, tags, description } = todo;
 
-    const tagsArray = tags.map((tag) => {
+    const formattedTags = Array.isArray(tags) ? tags : tags.split(' ');
+
+    const tagsArray = formattedTags.map((tag) => {
       return {
         name: tag,
       };
