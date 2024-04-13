@@ -1,13 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { Client } from '@notionhq/client';
-import { CreateTodoDto } from './dto/create-todo.dto';
-import { CreateBillDto } from './dto/create-bill.dto';
+import { Bill } from './interfaces/bill';
+import { Todo } from './interfaces/todo';
+import { Note } from './interfaces/note';
+import { markdownToBlocks } from '@tryfabric/martian';
 
 @Injectable()
 export class NotionService {
   private notionClient: Client;
   private readonly notionTodoDatabaseId = process.env.NOTION_TODO_DATABASE_ID;
   private readonly notionBillDatabaseId = process.env.NOTION_BILL_DATABASE_ID;
+  private readonly notionNoteDatabaseId = process.env.NOTION_NOTE_DATABASE_ID;
 
   constructor() {
     this.notionClient = new Client({
@@ -21,7 +24,7 @@ export class NotionService {
     });
   }
 
-  addTodo(todo: CreateTodoDto) {
+  addTodo(todo: Todo) {
     const { name, tags, description } = todo;
 
     const formattedTags = Array.isArray(tags) ? tags : tags.split(' ');
@@ -72,7 +75,7 @@ export class NotionService {
     });
   }
 
-  addBillRecord(bill: CreateBillDto) {
+  addBillRecord(bill: Bill) {
     const { name, method, type, description, isInput, amount } = bill;
 
     const formattedType = Array.isArray(type) ? type : type.split(' ');
@@ -131,6 +134,60 @@ export class NotionService {
         database_id: this.notionBillDatabaseId,
       },
       properties: properties,
+    });
+  }
+
+  getNoteList() {
+    return this.notionClient.databases.query({
+      database_id: this.notionNoteDatabaseId,
+    });
+  }
+
+  async addNote(note: Note) {
+    const { content, tags } = note;
+
+    const formattedTags = Array.isArray(tags) ? tags : (tags || '').split(' ');
+
+    const tagsArray = formattedTags.map((tag) => {
+      return {
+        name: tag,
+      };
+    });
+
+    const properties: Record<string, any> = {
+      title: {
+        title: [
+          {
+            text: { content: note.title, link: null },
+            plain_text: note.title,
+          },
+        ],
+      },
+      url: {
+        rich_text: [
+          {
+            text: { content: note.url, link: null },
+            plain_text: note.url,
+          },
+        ],
+      },
+    };
+
+    if (tags) {
+      properties.tags = {
+        type: 'multi_select',
+        multi_select: tagsArray,
+      };
+    }
+
+    const blocks = markdownToBlocks(content);
+
+    return this.notionClient.pages.create({
+      parent: {
+        database_id: this.notionNoteDatabaseId,
+      },
+      properties: properties,
+      children: blocks as any,
     });
   }
 }
