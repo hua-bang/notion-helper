@@ -1,13 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { Client } from '@notionhq/client';
-import { CreateTodoDto } from './dto/create-todo.dto';
-import { CreateBillDto } from './dto/create-bill.dto';
+import { Bill } from './interfaces/bill';
+import { Todo } from './interfaces/todo';
 
 @Injectable()
 export class NotionService {
   private notionClient: Client;
   private readonly notionTodoDatabaseId = process.env.NOTION_TODO_DATABASE_ID;
   private readonly notionBillDatabaseId = process.env.NOTION_BILL_DATABASE_ID;
+  private readonly notionNoteDatabaseId = process.env.NOTION_NOTE_DATABASE_ID;
 
   constructor() {
     this.notionClient = new Client({
@@ -21,7 +22,7 @@ export class NotionService {
     });
   }
 
-  addTodo(todo: CreateTodoDto) {
+  addTodo(todo: Todo) {
     const { name, tags, description } = todo;
 
     const formattedTags = Array.isArray(tags) ? tags : tags.split(' ');
@@ -72,7 +73,7 @@ export class NotionService {
     });
   }
 
-  addBillRecord(bill: CreateBillDto) {
+  addBillRecord(bill: Bill) {
     const { name, method, type, description, isInput, amount } = bill;
 
     const formattedType = Array.isArray(type) ? type : type.split(' ');
@@ -133,4 +134,12 @@ export class NotionService {
       properties: properties,
     });
   }
+
+
+  getNoteList() {
+    return this.notionClient.databases.query({
+      database_id: this.notionNoteDatabaseId,
+    });
+  }
+
 }
