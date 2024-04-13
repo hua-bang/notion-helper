@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { Client } from '@notionhq/client';
 import { Bill } from './interfaces/bill';
 import { Todo } from './interfaces/todo';
+import { Note } from './interfaces/note';
+import { title } from 'process';
 
 @Injectable()
 export class NotionService {
@@ -135,11 +137,62 @@ export class NotionService {
     });
   }
 
-
   getNoteList() {
     return this.notionClient.databases.query({
       database_id: this.notionNoteDatabaseId,
     });
   }
 
+  addNote(note: Note) {
+    const { content, tags } = note;
+
+    const formattedTags = Array.isArray(tags) ? tags : (tags || '').split(' ');
+
+    const tagsArray = formattedTags.map((tag) => {
+      return {
+        name: tag,
+      };
+    });
+
+    const properties: Record<string, any> = {
+      title: {
+        title: [
+          {
+            text: { content: note.title, link: null },
+            plain_text: note.title,
+          },
+        ],
+      },
+      url: {
+        rich_text: [
+          {
+            text: { content: note.url, link: null },
+            plain_text: note.url,
+          },
+        ],
+      },
+    };
+
+    if (tags) {
+      properties.tags = {
+        type: 'multi_select',
+        multi_select: tagsArray,
+      };
+    }
+    return this.notionClient.pages.create({
+      parent: {
+        database_id: this.notionNoteDatabaseId,
+      },
+      properties: properties,
+      children: [
+        {
+          object: 'block',
+          type: 'paragraph',
+          paragraph: {
+            rich_text: [{ type: 'text', text: { content: content } }],
+          },
+        },
+      ],
+    });
+  }
 }

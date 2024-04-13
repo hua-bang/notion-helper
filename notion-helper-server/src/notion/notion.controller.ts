@@ -3,6 +3,7 @@ import { NotionService } from './notion.service';
 import { CreateTodoDto } from './dto/create-todo.dto';
 import { AppConfigGuard } from 'src/common/guards/app-config';
 import { CreateBillDto } from './dto/create-bill.dto';
+import { CreateNoteDto } from './dto/create-note.dto';
 
 @Controller('notion')
 @UseGuards(AppConfigGuard)
@@ -27,5 +28,15 @@ export class NotionController {
   @Post('/bill/add')
   addBillRecord(@Body() bill: CreateBillDto) {
     return this.notionService.addBillRecord(bill);
+  }
+
+  @Get('/note/list')
+  getNoteList() {
+    return this.notionService.getNoteList();
+  }
+
+  @Post('/note/add')
+  addNote(@Body() note: CreateNoteDto) {
+    return this.notionService.addNote(note);
   }
 }
