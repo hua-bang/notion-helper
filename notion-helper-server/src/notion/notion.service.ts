@@ -3,7 +3,7 @@ import { Client } from '@notionhq/client';
 import { Bill } from './interfaces/bill';
 import { Todo } from './interfaces/todo';
 import { Note } from './interfaces/note';
-import { title } from 'process';
+import { markdownToBlocks } from '@tryfabric/martian';
 
 @Injectable()
 export class NotionService {
@@ -143,7 +143,7 @@ export class NotionService {
     });
   }
 
-  addNote(note: Note) {
+  async addNote(note: Note) {
     const { content, tags } = note;
 
     const formattedTags = Array.isArray(tags) ? tags : (tags || '').split(' ');
@@ -179,20 +179,15 @@ export class NotionService {
         multi_select: tagsArray,
       };
     }
+
+    const blocks = markdownToBlocks(content);
+
     return this.notionClient.pages.create({
       parent: {
         database_id: this.notionNoteDatabaseId,
       },
       properties: properties,
-      children: [
-        {
-          object: 'block',
-          type: 'paragraph',
-          paragraph: {
-            rich_text: [{ type: 'text', text: { content: content } }],
-          },
-        },
-      ],
+      children: blocks as any,
     });
   }
 }
