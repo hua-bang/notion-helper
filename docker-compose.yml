@@ -3,7 +3,6 @@ services:
   notion-helper-server:
     build: ./notion-helper-server
     ports:
-      - 3070:4000
+      - 4000:4000
     env_file:
       - .env
-    
