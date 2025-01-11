@@ -8,7 +8,7 @@ import { CreateNoteDto } from './dto/create-note.dto';
 @Controller('notion')
 @UseGuards(AppConfigGuard)
 export class NotionController {
-  constructor(private readonly notionService: NotionService) {}
+  constructor(private readonly notionService: NotionService) { }
 
   @Get('/todo/list')
   getTodoList() {
