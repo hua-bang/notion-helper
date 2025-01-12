@@ -27,3 +27,18 @@ export type TaskTypeGroupSortType =
   | 'costTime'
   | 'actualTime'
   | 'degreeConcentration';
+
+export interface TaskReport {
+  list: TaskTypeGroup[];
+  actualTime: number;
+  costTime: number;
+  degreeConcentration: number;
+  actualTimeStr: string;
+  costTimeStr: string;
+  dateRange: {
+    start: number;
+    end: number;
+    startISO8601: string;
+    endISO8601: string;
+  };
+}
