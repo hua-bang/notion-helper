@@ -4,11 +4,12 @@ import { CreateTodoDto } from './dto/create-todo.dto';
 import { AppConfigGuard } from 'src/common/guards/app-config';
 import { CreateBillDto } from './dto/create-bill.dto';
 import { CreateNoteDto } from './dto/create-note.dto';
+import { GetTaskListDto } from './dto/get-task-list.dto';
 
 @Controller('notion')
 @UseGuards(AppConfigGuard)
 export class NotionController {
-  constructor(private readonly notionService: NotionService) { }
+  constructor(private readonly notionService: NotionService) {}
 
   @Get('/todo/list')
   getTodoList() {
@@ -38,5 +39,10 @@ export class NotionController {
   @Post('/note/add')
   addNote(@Body() note: CreateNoteDto) {
     return this.notionService.addNote(note);
+  }
+
+  @Post('/task/list')
+  getTaskBy(@Body() params: GetTaskListDto) {
+    return this.notionService.getTaskList(params);
   }
 }
