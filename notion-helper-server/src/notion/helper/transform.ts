@@ -1,4 +1,4 @@
-import { TaskForCostTime } from '../interfaces/task';
+import { TaskForCostTime, TaskTypeGroup } from '../interfaces/task';
 
 export const transformTaskDatabaseResponse2TaskForCostTime = (
   task: any,
@@ -52,4 +52,39 @@ export const transformTaskDatabaseResponse2TaskForCostTime = (
     notionUrl: task.url,
     degreeConcentration: actualTime / costTime,
   };
+};
+
+export const transformTaskForCostTimeList2TaskTypeGroup = (
+  taskList: TaskForCostTime[],
+  startTime: number,
+  endTime: number,
+): TaskTypeGroup[] => {
+  // 按照任务类型进行分组
+  const taskTypeGroupMap: Record<string, TaskTypeGroup> = {};
+  taskList.forEach((task) => {
+    task.type.forEach((type) => {
+      if (!taskTypeGroupMap[type]) {
+        taskTypeGroupMap[type] = {
+          type,
+          tasks: [],
+          actualTime: 0,
+          costTime: 0,
+          degreeConcentration: 0,
+          date: [0, 0],
+        };
+      }
+      taskTypeGroupMap[type].tasks.push(task);
+      taskTypeGroupMap[type].actualTime += task.actualTime;
+      taskTypeGroupMap[type].costTime += task.costTime;
+    });
+  });
+  // 将分组结果转换为数组
+  const taskTypeGroupList: TaskTypeGroup[] = Object.values(taskTypeGroupMap);
+  // 计算任务专注度
+  taskTypeGroupList.forEach((group) => {
+    group.degreeConcentration = group.actualTime / group.costTime;
+    group.date = [startTime, endTime];
+  });
+
+  return taskTypeGroupList;
 };

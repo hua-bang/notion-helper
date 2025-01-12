@@ -45,4 +45,9 @@ export class NotionController {
   getTaskBy(@Body() params: GetTaskListDto) {
     return this.notionService.getTaskList(params);
   }
+
+  @Post('/task/report')
+  getTaskReport(@Body() params: GetTaskListDto) {
+    return this.notionService.getTaskReport(params);
+  }
 }

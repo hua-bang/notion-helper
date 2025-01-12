@@ -28,6 +28,7 @@
     "@tryfabric/martian": "^1.2.4",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
+    "dayjs": "^1.11.13",
     "dotenv": "^16.4.4",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.1"

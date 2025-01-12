@@ -5,10 +5,18 @@ import { Todo } from './interfaces/todo';
 import { Note } from './interfaces/note';
 import { markdownToBlocks } from '@tryfabric/martian';
 import { TimeType } from './constants';
-import { getISO8601TimeRangeByTimeType } from 'src/utils/time';
+import {
+  formatSecondsToTime,
+  getISO8601TimeRangeByTimeType,
+  getTimeRangeByTimeType,
+} from 'src/utils/time';
 import { GetTaskListDto } from './dto/get-task-list.dto';
 import { DatabaseObjectResponse } from '@notionhq/client/build/src/api-endpoints';
-import { transformTaskDatabaseResponse2TaskForCostTime } from './helper/transform';
+import {
+  transformTaskDatabaseResponse2TaskForCostTime,
+  transformTaskForCostTimeList2TaskTypeGroup,
+} from './helper/transform';
+import { GetTaskReportDto } from './dto/get-task-report.dto';
 
 @Injectable()
 export class NotionService {
@@ -197,8 +205,8 @@ export class NotionService {
     });
   }
 
-  async getTaskList(params: GetTaskListDto) {
-    const { baseTime, timeType = TimeType.Day } = params;
+  async getTaskList(params?: GetTaskListDto) {
+    const { baseTime, timeType = TimeType.Day } = params || {};
     const { start, end } = getISO8601TimeRangeByTimeType(timeType, baseTime);
     const { results } = await this.notionClient.databases.query({
       database_id: this.notionTaskDatabaseId,
@@ -227,5 +235,47 @@ export class NotionService {
     });
 
     return taskForTimeCost;
+  }
+
+  async getTaskReport(params?: GetTaskReportDto) {
+    const {
+      baseTime,
+      timeType = TimeType.Day,
+      sortBy = 'costTimeSum',
+    } = params || {};
+    const taskList = await this.getTaskList({
+      baseTime,
+      timeType,
+    });
+    const { start, end } = getTimeRangeByTimeType(timeType, baseTime);
+    const taskTypeGroupArr =
+      transformTaskForCostTimeList2TaskTypeGroup(taskList, start, end) || [];
+
+    taskTypeGroupArr.sort((a, b) => {
+      return b[sortBy] - a[sortBy];
+    });
+
+    const totalCostTime = taskTypeGroupArr.reduce((acc, cur) => {
+      return acc + cur.costTime;
+    }, 0);
+
+    const totalActualTime = taskTypeGroupArr.reduce((acc, cur) => {
+      return acc + cur.actualTime;
+    }, 0);
+
+    return {
+      list: taskTypeGroupArr,
+      actualTime: totalActualTime,
+      costTime: totalCostTime,
+      degreeConcentration: totalActualTime / totalCostTime,
+      actualTimeStr: formatSecondsToTime(totalActualTime),
+      costTimeStr: formatSecondsToTime(totalCostTime),
+      dateRange: {
+        start,
+        end,
+        startISO8601: new Date(start).toISOString(),
+        endISO8601: new Date(end).toISOString(),
+      },
+    };
   }
 }
