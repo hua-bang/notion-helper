@@ -4,6 +4,11 @@ import { Bill } from './interfaces/bill';
 import { Todo } from './interfaces/todo';
 import { Note } from './interfaces/note';
 import { markdownToBlocks } from '@tryfabric/martian';
+import { TimeType } from './constants';
+import { getISO8601TimeRangeByTimeType } from 'src/utils/time';
+import { GetTaskListDto } from './dto/get-task-list.dto';
+import { DatabaseObjectResponse } from '@notionhq/client/build/src/api-endpoints';
+import { transformTaskDatabaseResponse2TaskForCostTime } from './helper/transform';
 
 @Injectable()
 export class NotionService {
@@ -11,6 +16,7 @@ export class NotionService {
   private readonly notionTodoDatabaseId = process.env.NOTION_TODO_DATABASE_ID;
   private readonly notionBillDatabaseId = process.env.NOTION_BILL_DATABASE_ID;
   private readonly notionNoteDatabaseId = process.env.NOTION_NOTE_DATABASE_ID;
+  private readonly notionTaskDatabaseId = process.env.NOTION_TASK_DATABASE_ID;
 
   constructor() {
     this.notionClient = new Client({
@@ -189,5 +195,37 @@ export class NotionService {
       properties: properties,
       children: blocks as any,
     });
+  }
+
+  async getTaskList(params: GetTaskListDto) {
+    const { baseTime, timeType = TimeType.Day } = params;
+    const { start, end } = getISO8601TimeRangeByTimeType(timeType, baseTime);
+    const { results } = await this.notionClient.databases.query({
+      database_id: this.notionTaskDatabaseId,
+      filter: {
+        and: [
+          {
+            property: 'Date',
+            date: {
+              after: String(start),
+            },
+          },
+          {
+            property: 'Date',
+            date: {
+              before: String(end),
+            },
+          },
+        ],
+      },
+    });
+
+    const taskForTimeCost = results.map((item) => {
+      return transformTaskDatabaseResponse2TaskForCostTime(
+        item as unknown as DatabaseObjectResponse,
+      );
+    });
+
+    return taskForTimeCost;
   }
 }
