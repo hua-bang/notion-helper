@@ -17,6 +17,9 @@ import {
   transformTaskForCostTimeList2TaskTypeGroup,
 } from './helper/transform';
 import { GetTaskReportDto } from './dto/get-task-report.dto';
+import { CreateDailyReportDto } from './dto/create-daily-report';
+import { generateReport } from './helper/report';
+import { TaskReport } from './interfaces/task';
 
 @Injectable()
 export class NotionService {
@@ -25,6 +28,8 @@ export class NotionService {
   private readonly notionBillDatabaseId = process.env.NOTION_BILL_DATABASE_ID;
   private readonly notionNoteDatabaseId = process.env.NOTION_NOTE_DATABASE_ID;
   private readonly notionTaskDatabaseId = process.env.NOTION_TASK_DATABASE_ID;
+  private readonly notionDailyReportDatabaseId =
+    process.env.NOTION_DAILY_REPORT_DATABASE_ID;
 
   constructor() {
     this.notionClient = new Client({
@@ -252,7 +257,7 @@ export class NotionService {
       transformTaskForCostTimeList2TaskTypeGroup(taskList, start, end) || [];
 
     taskTypeGroupArr.sort((a, b) => {
-      return b[sortBy] - a[sortBy];
+      return (b[sortBy] || 0) - (a[sortBy] || 0);
     });
 
     const totalCostTime = taskTypeGroupArr.reduce((acc, cur) => {
@@ -263,7 +268,7 @@ export class NotionService {
       return acc + cur.actualTime;
     }, 0);
 
-    return {
+    const res: TaskReport = {
       list: taskTypeGroupArr,
       actualTime: totalActualTime,
       costTime: totalCostTime,
@@ -277,5 +282,21 @@ export class NotionService {
         endISO8601: new Date(end).toISOString(),
       },
     };
+
+    return res;
+  }
+
+  async addDailyReport(params: CreateDailyReportDto) {
+    const reportInfo = await this.getTaskReport(params);
+    const { properties, children } = generateReport(reportInfo);
+
+    return this.notionClient.pages.create({
+      parent: {
+        database_id: this.notionDailyReportDatabaseId,
+      },
+      properties: properties,
+      // 添加页面内容
+      children: children,
+    });
   }
 }

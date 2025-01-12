@@ -50,4 +50,9 @@ export class NotionController {
   getTaskReport(@Body() params: GetTaskListDto) {
     return this.notionService.getTaskReport(params);
   }
+
+  @Post('/task/report/add')
+  addDailyReport() {
+    return this.notionService.addDailyReport({});
+  }
 }
