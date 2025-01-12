@@ -56,3 +56,18 @@ export function getISO8601TimeRangeByTimeType(
     end: formatToISO8601(new Date(end)),
   };
 }
+
+export function formatSecondsToTime(seconds: number) {
+  const hour = Math.floor(seconds / 3600);
+  const minute = Math.floor((seconds % 3600) / 60);
+  const second = seconds % 60;
+
+  if (!hour && !minute) {
+    return `${second}s`;
+  }
+  if (!hour) {
+    return `${minute}m${second}s`;
+  }
+
+  return `${hour}h${minute}m${second}s`;
+}
