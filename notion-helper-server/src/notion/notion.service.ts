@@ -261,7 +261,9 @@ export class NotionService {
     });
 
     const totalCostTime = taskTypeGroupArr.reduce((acc, cur) => {
-      return acc + cur.costTime;
+      const costTime =
+        cur.costTime >= cur.actualTime ? cur.actualTime : cur.costTime;
+      return acc + costTime;
     }, 0);
 
     const totalActualTime = taskTypeGroupArr.reduce((acc, cur) => {
