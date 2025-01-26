@@ -5,6 +5,8 @@ import { AppConfigGuard } from 'src/common/guards/app-config';
 import { CreateBillDto } from './dto/create-bill.dto';
 import { CreateNoteDto } from './dto/create-note.dto';
 import { GetTaskListDto } from './dto/get-task-list.dto';
+import { CreateReportDto } from './dto/create-report';
+import { TimeType } from './constants';
 
 @Controller('notion')
 @UseGuards(AppConfigGuard)
@@ -52,7 +54,11 @@ export class NotionController {
   }
 
   @Post('/task/report/add')
-  addDailyReport() {
-    return this.notionService.addReport({});
+  addReport(@Body() params: CreateReportDto) {
+    const { timeType = TimeType.Day } = params;
+    if (timeType === TimeType.Week) {
+      return this.notionService.addWeeklyReport(params);
+    }
+    return this.notionService.addDailyReport(params);
   }
 }

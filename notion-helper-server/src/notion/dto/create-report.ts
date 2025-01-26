@@ -1,7 +1,7 @@
 import { TimeType } from '../constants';
 import { TaskTypeGroupSortType } from '../interfaces/task';
 
-export class CreateDailyReportDto {
+export class CreateReportDto {
   baseTime?: number;
 
   timeType?: TimeType;

@@ -1,7 +1,7 @@
 import { TimeType } from './../constants/index';
 
 export class GetTaskListDto {
-  baseTime?: number;
+  baseTime?: number | string;
 
   timeType: TimeType;
 }

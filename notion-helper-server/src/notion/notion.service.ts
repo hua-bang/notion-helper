@@ -17,7 +17,7 @@ import {
   transformTaskForCostTimeList2TaskTypeGroup,
 } from './helper/transform';
 import { GetTaskReportDto } from './dto/get-task-report.dto';
-import { CreateDailyReportDto } from './dto/create-daily-report';
+import { CreateReportDto } from './dto/create-report';
 import { generateReport } from './helper/report';
 import { TaskReport } from './interfaces/task';
 
@@ -30,6 +30,8 @@ export class NotionService {
   private readonly notionTaskDatabaseId = process.env.NOTION_TASK_DATABASE_ID;
   private readonly notionDailyReportDatabaseId =
     process.env.NOTION_DAILY_REPORT_DATABASE_ID;
+  private readonly notionWeeklyReportDatabaseId =
+    process.env.NOTION_WEEKLY_REPORT_DATABASE_ID;
 
   constructor() {
     this.notionClient = new Client({
@@ -286,17 +288,29 @@ export class NotionService {
     return res;
   }
 
-  async addReport(params: CreateDailyReportDto) {
+  async addReport(dataBaseId: string, params: CreateReportDto) {
     const reportInfo = await this.getTaskReport(params);
     const { properties, children } = generateReport(reportInfo);
 
     return this.notionClient.pages.create({
       parent: {
-        database_id: this.notionDailyReportDatabaseId,
+        database_id: dataBaseId,
       },
       properties: properties,
       // 添加页面内容
       children: children,
     });
+  }
+
+  async addDailyReport(params: CreateReportDto) {
+    return this.addReport(this.notionDailyReportDatabaseId, params);
+  }
+
+  async addWeeklyReport(params: CreateReportDto) {
+    const finalParams = {
+      ...params,
+      timeType: TimeType.Week,
+    };
+    return this.addReport(this.notionWeeklyReportDatabaseId, finalParams);
   }
 }

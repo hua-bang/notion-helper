@@ -1,3 +1,4 @@
+import * as dayjs from 'dayjs';
 import { TimeType } from './../notion/constants/index';
 
 /**
@@ -8,7 +9,7 @@ import { TimeType } from './../notion/constants/index';
  */
 export function getTimeRangeByTimeType(
   timeType: TimeType,
-  baseTime = Date.now(),
+  baseTime: number | string = Date.now(),
 ) {
   const baseDate = new Date(baseTime);
   const year = baseDate.getFullYear();
@@ -24,6 +25,8 @@ export function getTimeRangeByTimeType(
       };
     case TimeType.Week:
       return {
+        // date - day 表示当天是周几，减去 day 就是本周的第一天
+        // date - day + 7 表示本周的最后一天
         start: new Date(year, month, date - day).getTime(),
         end: new Date(year, month, date - day + 7).getTime(),
       };
@@ -47,7 +50,7 @@ export function formatToISO8601(date: Date): string {
 
 export function getISO8601TimeRangeByTimeType(
   timeType: TimeType,
-  baseTime = Date.now(),
+  baseTime: number | string = Date.now(),
 ) {
   const { start, end } = getTimeRangeByTimeType(timeType, baseTime);
 
@@ -71,3 +74,10 @@ export function formatSecondsToTime(seconds: number) {
 
   return `${hour}h${minute}m${second}s`;
 }
+
+export const isSameDay = (
+  startDate: number | string,
+  endDate: number | string,
+) => {
+  return dayjs(startDate).isSame(dayjs(endDate), 'day');
+};

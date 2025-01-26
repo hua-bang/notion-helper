@@ -1,7 +1,7 @@
 import { format2Percent } from 'src/utils/format';
 import { TaskReport, TaskTypeGroup } from '../interfaces/task';
 import * as dayjs from 'dayjs';
-import { formatSecondsToTime } from 'src/utils/time';
+import { formatSecondsToTime, isSameDay } from 'src/utils/time';
 
 /**
  * 生成报告
@@ -9,9 +9,12 @@ import { formatSecondsToTime } from 'src/utils/time';
  * @returns
  */
 export const generateReport = (reportInfo: TaskReport) => {
-  const time = reportInfo.dateRange.start || 0;
+  const timeStartStr = dayjs(reportInfo.dateRange.start).format('YYYY-MM-DD');
+  const timeEndStr = dayjs(reportInfo.dateRange.end).format('YYYY-MM-DD');
 
-  const timeStr = dayjs(time).format('YYYY-MM-DD');
+  const timeStr = isSameDay(timeStartStr, timeEndStr)
+    ? dayjs(timeStartStr).format('YYYY-MM-DD')
+    : `${timeStartStr} - ${timeEndStr}`;
 
   const {
     actualTime,
@@ -34,8 +37,8 @@ export const generateReport = (reportInfo: TaskReport) => {
     },
     ReportDate: {
       date: {
-        start: timeStr, // 填写您想要的日期
-        end: null, // 如果没有结束日期，可以设置为 null
+        start: timeStartStr, // 填写您想要的日期
+        end: timeEndStr, // 如果没有结束日期，可以设置为 null
       },
     },
 
