@@ -47,20 +47,60 @@ export const generateReport = (reportInfo: TaskReport) => {
     },
   };
 
-  const taskGroupBulletList = list.map((taskGroup) => ({
-    object: 'block',
-    type: 'bulleted_list_item',
-    bulleted_list_item: {
-      rich_text: [
-        {
-          type: 'text',
-          text: {
-            content: `${taskGroup.type}:  ${formatSecondsToTime(taskGroup.actualTime)}/${formatSecondsToTime(taskGroup.costTime)}, ${format2Percent(taskGroup.degreeConcentration)}`,
+  const taskGroupTable = [
+    {
+      object: 'block',
+      type: 'table',
+      table: {
+        table_width: 4,
+        has_column_header: true,
+        has_row_header: false,
+        children: [
+          {
+            type: 'table_row',
+            table_row: {
+              cells: [
+                [{ type: 'text', text: { content: 'Task Type' } }],
+                [{ type: 'text', text: { content: 'Actual Time' } }],
+                [{ type: 'text', text: { content: 'Cost Time' } }],
+                [{ type: 'text', text: { content: 'Concentration' } }],
+              ],
+            },
           },
-        },
-      ],
+          ...list.map((taskGroup) => ({
+            type: 'table_row',
+            table_row: {
+              cells: [
+                [{ type: 'text', text: { content: taskGroup.type } }],
+                [
+                  {
+                    type: 'text',
+                    text: {
+                      content: formatSecondsToTime(taskGroup.actualTime),
+                    },
+                  },
+                ],
+                [
+                  {
+                    type: 'text',
+                    text: { content: formatSecondsToTime(taskGroup.costTime) },
+                  },
+                ],
+                [
+                  {
+                    type: 'text',
+                    text: {
+                      content: format2Percent(taskGroup.degreeConcentration),
+                    },
+                  },
+                ],
+              ],
+            },
+          })),
+        ],
+      },
     },
-  }));
+  ];
 
   const children: any = [
     {
@@ -101,7 +141,7 @@ export const generateReport = (reportInfo: TaskReport) => {
         ],
       },
     },
-    ...taskGroupBulletList,
+    ...taskGroupTable,
   ];
 
   return {

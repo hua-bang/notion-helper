@@ -286,7 +286,7 @@ export class NotionService {
     return res;
   }
 
-  async addDailyReport(params: CreateDailyReportDto) {
+  async addReport(params: CreateDailyReportDto) {
     const reportInfo = await this.getTaskReport(params);
     const { properties, children } = generateReport(reportInfo);
 

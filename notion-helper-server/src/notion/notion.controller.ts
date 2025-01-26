@@ -53,6 +53,6 @@ export class NotionController {
 
   @Post('/task/report/add')
   addDailyReport() {
-    return this.notionService.addDailyReport({});
+    return this.notionService.addReport({});
   }
 }
