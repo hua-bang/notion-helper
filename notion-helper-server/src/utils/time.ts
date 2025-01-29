@@ -19,21 +19,24 @@ export function getTimeRangeByTimeType(
 
   switch (timeType) {
     case TimeType.Day:
+      // 整体返回当天的时间范围， end 需要减 1 秒
       return {
         start: new Date(year, month, date).getTime(),
-        end: new Date(year, month, date + 1).getTime(),
+        end: new Date(year, month, date + 1).getTime() - 1,
       };
     case TimeType.Week:
+      // 整体返回当周的时间范围， end 需要减 1 秒
       return {
         // date - day 表示当天是周几，减去 day 就是本周的第一天
         // date - day + 7 表示本周的最后一天
         start: new Date(year, month, date - day).getTime(),
-        end: new Date(year, month, date - day + 7).getTime(),
+        end: new Date(year, month, date - day + 7).getTime() - 1,
       };
     case TimeType.Month:
+      // 整体返回当月的时间范围， end 需要减 1 秒
       return {
         start: new Date(year, month, 1).getTime(),
-        end: new Date(year, month + 1, 1).getTime(),
+        end: new Date(year, month + 1, 1).getTime() - 1,
       };
     default:
       return {

@@ -78,7 +78,7 @@ export const generateReport = (reportInfo: TaskReport) => {
           {
             type: 'text',
             text: {
-              content: `degreeConcentration:  ${format2Percent(degreeConcentration)} (${actualTimeStr}/${costTimeStr})`,
+              content: `🧘 时间专注度:  ${format2Percent(degreeConcentration)} (${actualTimeStr}/${costTimeStr})`,
             },
           },
         ],
