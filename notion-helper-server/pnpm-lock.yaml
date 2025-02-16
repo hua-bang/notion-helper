@@ -44,6 +44,12 @@ importers:
       rxjs:
         specifier: ^7.8.1
         version: 7.8.1
+      timezone:
+        specifier: link:dayjs/plugin/timezone
+        version: link:dayjs/plugin/timezone
+      utc:
+        specifier: link:dayjs/plugin/utc
+        version: link:dayjs/plugin/utc
     devDependencies:
       '@nestjs/cli':
         specifier: ^10.0.0

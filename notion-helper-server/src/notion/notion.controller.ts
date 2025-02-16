@@ -23,11 +23,6 @@ export class NotionController {
     return this.notionService.addTodo(todo);
   }
 
-  @Get('/bill/list')
-  getBillList() {
-    return this.notionService.getBillList();
-  }
-
   @Post('/bill/add')
   addBillRecord(@Body() bill: CreateBillDto) {
     return this.notionService.addBillRecord(bill);

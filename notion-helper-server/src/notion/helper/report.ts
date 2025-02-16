@@ -2,13 +2,14 @@ import { format2Percent } from 'src/utils/format';
 import { TaskReport, TaskTypeGroup } from '../interfaces/task';
 import * as dayjs from 'dayjs';
 import { formatSecondsToTime, isSameDay } from 'src/utils/time';
+import { BillInfo, IncomeAndExpenditureType } from './bill';
 
 /**
  * 生成报告
  * @param reportInfo
  * @returns
  */
-export const generateReport = (reportInfo: TaskReport) => {
+export const generateReport = (reportInfo: TaskReport, billInfo: BillInfo) => {
   const timeStartStr = dayjs(reportInfo.dateRange.start).format('YYYY-MM-DD');
   const timeEndStr = dayjs(reportInfo.dateRange.end).format('YYYY-MM-DD');
 
@@ -24,6 +25,8 @@ export const generateReport = (reportInfo: TaskReport) => {
     costTimeStr,
     list = [],
   } = reportInfo;
+
+  const { billNum } = billInfo;
 
   const properties: Record<string, any> = {
     // 标题属性 - 使用日期作为标题
@@ -48,6 +51,9 @@ export const generateReport = (reportInfo: TaskReport) => {
     },
     costTime: {
       number: costTime,
+    },
+    billNum: {
+      number: billNum || 0,
     },
     // 百分比属性
     degreeConcentration: {
@@ -84,9 +90,29 @@ export const generateReport = (reportInfo: TaskReport) => {
         ],
       },
     },
+    {
+      object: 'block',
+      type: 'bulleted_list_item',
+      bulleted_list_item: {
+        rich_text: [
+          {
+            type: 'text',
+            text: {
+              content: `💰 经济开销为:  ${billNum}（开销为：${billInfo.expenditure}, 收入为 ${billInfo.income}）`,
+            },
+          },
+        ],
+      },
+    },
   ];
 
-  const children: any = [...summaryContent, ...taskInfoContent];
+  const billInfoTableContent = generateBillInfoContent(billInfo);
+
+  const children: any = [
+    ...summaryContent,
+    ...taskInfoContent,
+    ...billInfoTableContent,
+  ];
 
   return {
     properties,
@@ -99,7 +125,7 @@ export const generateReport = (reportInfo: TaskReport) => {
  * @param task task item
  * @returns
  */
-const generateTaskItemInfoContent = (taskItem: TaskTypeGroup) => {
+const generateTaskInfoItemContent = (taskItem: TaskTypeGroup) => {
   const taskTitle = {
     object: 'block',
     type: 'paragraph',
@@ -204,11 +230,113 @@ const generateTaskInfoContent = (list: TaskTypeGroup[]) => {
 
   const taskInfoTableContent = list.map((taskGroup) => {
     const { taskTitle, taskTableContent } =
-      generateTaskItemInfoContent(taskGroup);
+      generateTaskInfoItemContent(taskGroup);
     return [taskTitle, taskTableContent];
   });
 
   const taskInfoContent = [taskTitleBlock, ...taskInfoTableContent.flat()];
 
   return taskInfoContent;
+};
+
+const generateBillInfoContent = (billInfo: BillInfo) => {
+  const billTitleBlock = {
+    object: 'block',
+    type: 'heading_1',
+    heading_1: {
+      rich_text: [
+        {
+          type: 'text',
+          text: { content: '💰 Bill ' },
+        },
+      ],
+    },
+  };
+
+  const billInfoTableContent = generateBillListTable(billInfo);
+
+  const billInfoContent = [billTitleBlock, billInfoTableContent];
+
+  return billInfoContent;
+};
+
+const generateBillListTable = (billInfo: BillInfo) => {
+  const billList = billInfo.list.sort((a, b) => b.amount - a.amount);
+  const billTableContent = {
+    object: 'block',
+    type: 'table',
+    table: {
+      table_width: 5,
+      has_column_header: true,
+      has_row_header: false,
+      children: [
+        {
+          type: 'table_row',
+          table_row: {
+            cells: [
+              [{ type: 'text', text: { content: '😄 项目' } }],
+              [{ type: 'text', text: { content: '🤔 收入/支出' } }],
+              [{ type: 'text', text: { content: '🥸 类型' } }],
+              [{ type: 'text', text: { content: '💰 金额情况' } }],
+              [{ type: 'text', text: { content: '👀 占比' } }],
+            ],
+          },
+        },
+        ...(billList || []).map((bill) => ({
+          type: 'table_row',
+          table_row: {
+            cells: [
+              [
+                {
+                  type: 'text',
+                  text: {
+                    content: bill.name,
+                    link: {
+                      url: bill.notionUrl,
+                    },
+                  },
+                },
+              ],
+              [
+                {
+                  type: 'text',
+                  text: {
+                    content:
+                      bill.inOrOutType === IncomeAndExpenditureType.INCOME
+                        ? '收入'
+                        : '支出',
+                  },
+                },
+              ],
+              [
+                {
+                  type: 'text',
+                  text: { content: bill.types.join(',') },
+                },
+              ],
+              [
+                {
+                  type: 'text',
+                  text: { content: String(bill.amount) },
+                },
+              ],
+              [
+                {
+                  type: 'text',
+                  text: {
+                    content:
+                      billInfo.billNum === 0
+                        ? '-'
+                        : `${((bill.amount / billInfo.billNum) * 100).toFixed(2)}%`,
+                  },
+                },
+              ],
+            ],
+          },
+        })),
+      ],
+    },
+  };
+
+  return billTableContent;
 };
