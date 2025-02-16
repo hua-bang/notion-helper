@@ -1,35 +1,78 @@
-export interface BillEntity {
-  id: string;
+import {
+  BillEntity,
+  BillInfo,
+  IncomeAndExpenditureType,
+  TypePercentItem,
+} from '../interfaces/bill';
 
-  name: string;
+export const transformBillListToBillInfo = (billList: any) => {
+  if (!billList.length) {
+    return undefined;
+  }
 
-  amount: number;
+  let income = 0,
+    expenditure = 0;
 
-  inOrOutType: IncomeAndExpenditureType;
+  const typePercentMap: Record<string, TypePercentItem> = {};
 
-  notionUrl?: string;
+  const nextBillList = billList.map((bill: any) => {
+    const { properties, id } = bill;
+    const amount = properties.Amount.number;
+    const name = properties.Name.title[0].plain_text;
+    const type = properties.Type.multi_select.map((item) => item.name)[0];
+    const inOrOutType =
+      properties['支出/收入']?.select?.name === '收入'
+        ? IncomeAndExpenditureType.INCOME
+        : IncomeAndExpenditureType.EXPENDITURE;
 
-  time: string;
+    if (inOrOutType === IncomeAndExpenditureType.INCOME) {
+      income += amount;
+    } else {
+      expenditure += amount;
+    }
 
-  types: string[];
-}
+    if (!typePercentMap[type]) {
+      typePercentMap[type] = {
+        type,
+        names: [],
+        billNum: 0,
+      };
+    }
+    typePercentMap[type].billNum =
+      inOrOutType === IncomeAndExpenditureType.INCOME
+        ? typePercentMap[type].billNum + amount
+        : typePercentMap[type].billNum - amount;
+    typePercentMap[type].names.push(name);
 
-export interface TypePercentItem {
-  type: string;
-  names: string[];
-  billNum: number;
-  percent?: number;
-}
+    const billEntity: BillEntity = {
+      id: id,
+      notionUrl: bill.url,
+      amount,
+      inOrOutType,
+      time: properties.Time.created_time,
+      name: properties.Name.title[0].plain_text,
+      types: properties.Type.multi_select.map((item) => item.name),
+    };
 
-export interface BillInfo {
-  list: BillEntity[];
-  income: number;
-  expenditure: number;
-  billNum: number;
-  typePercentInfoArr: TypePercentItem[];
-}
+    return billEntity;
+  });
 
-export enum IncomeAndExpenditureType {
-  INCOME = 1,
-  EXPENDITURE = 2,
-}
+  const billNum = income - expenditure;
+
+  Object.keys(typePercentMap).forEach((key) => {
+    typePercentMap[key].percent =
+      billNum === 0 ? 0 : typePercentMap[key].billNum / billNum;
+  });
+
+  const typePercentInfoArr: TypePercentItem[] = Object.values(typePercentMap);
+
+  const billInfo: BillInfo = {
+    list: nextBillList,
+    income,
+    expenditure,
+    billNum,
+    typePercentInfoArr,
+  };
+
+  return billInfo;
+};

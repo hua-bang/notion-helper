@@ -25,11 +25,6 @@ export function getTimeRangeByTimeType(
     case TimeType.Day:
       const startOfDay = baseDate.startOf('day');
       const endOfDay = baseDate.endOf('day');
-      console.log('Day range:', {
-        input: baseTime,
-        start: startOfDay.format(),
-        end: endOfDay.format(),
-      });
       return {
         start: startOfDay.valueOf(),
         end: endOfDay.valueOf(),
@@ -81,12 +76,6 @@ export function getISO8601TimeRangeByTimeType(
     .tz('Asia/Shanghai')
     .format('YYYY-MM-DDTHH:mm:ssZ');
   const endStr = dayjs(end).tz('Asia/Shanghai').format('YYYY-MM-DDTHH:mm:ssZ');
-
-  console.log('ISO range:', {
-    input: baseTime,
-    start: startStr,
-    end: endStr,
-  });
 
   return {
     start: startStr,

@@ -2,7 +2,7 @@ import { format2Percent } from 'src/utils/format';
 import { TaskReport, TaskTypeGroup } from '../interfaces/task';
 import * as dayjs from 'dayjs';
 import { formatSecondsToTime, isSameDay } from 'src/utils/time';
-import { BillInfo, IncomeAndExpenditureType } from './bill';
+import { BillInfo, IncomeAndExpenditureType } from '../interfaces/bill';
 
 /**
  * 生成报告

@@ -21,12 +21,7 @@ import { CreateReportDto } from './dto/create-report';
 import { generateReport } from './helper/report';
 import { TaskReport } from './interfaces/task';
 import { GetBillListDto } from './dto/get-bill-list.dto';
-import {
-  BillEntity,
-  BillInfo,
-  IncomeAndExpenditureType,
-  TypePercentItem,
-} from './helper/bill';
+import { transformBillListToBillInfo } from './helper/bill';
 
 @Injectable()
 export class NotionService {
@@ -126,74 +121,7 @@ export class NotionService {
 
   async getBillInfo(params?: GetBillListDto) {
     const billListFormNotion = await this.getBillListFormNotion(params);
-    if (!billListFormNotion.length) {
-      return undefined;
-    }
-
-    let income = 0,
-      expenditure = 0;
-
-    const typePercentMap: Record<string, TypePercentItem> = {};
-
-    const billList = billListFormNotion.map((bill: any) => {
-      const { properties, id } = bill;
-      const amount = properties.Amount.number;
-      const name = properties.Name.title[0].plain_text;
-      const type = properties.Type.multi_select.map((item) => item.name)[0];
-      const inOrOutType =
-        properties['支出/收入']?.select?.name === '收入'
-          ? IncomeAndExpenditureType.INCOME
-          : IncomeAndExpenditureType.EXPENDITURE;
-
-      if (inOrOutType === IncomeAndExpenditureType.INCOME) {
-        income += amount;
-      } else {
-        expenditure += amount;
-      }
-
-      if (!typePercentMap[type]) {
-        typePercentMap[type] = {
-          type,
-          names: [],
-          billNum: 0,
-        };
-      }
-      typePercentMap[type].billNum =
-        inOrOutType === IncomeAndExpenditureType.INCOME
-          ? typePercentMap[type].billNum + amount
-          : typePercentMap[type].billNum - amount;
-      typePercentMap[type].names.push(name);
-
-      const billEntity: BillEntity = {
-        id: id,
-        notionUrl: bill.url,
-        amount,
-        inOrOutType,
-        time: properties.Time.created_time,
-        name: properties.Name.title[0].plain_text,
-        types: properties.Type.multi_select.map((item) => item.name),
-      };
-
-      return billEntity;
-    });
-
-    const billNum = income - expenditure;
-
-    Object.keys(typePercentMap).forEach((key) => {
-      typePercentMap[key].percent =
-        billNum === 0 ? 0 : typePercentMap[key].billNum / billNum;
-    });
-
-    const typePercentInfoArr: TypePercentItem[] = Object.values(typePercentMap);
-
-    const billInfo: BillInfo = {
-      list: billList,
-      income,
-      expenditure,
-      billNum,
-      typePercentInfoArr,
-    };
-    return billInfo;
+    return transformBillListToBillInfo(billListFormNotion);
   }
 
   addBillRecord(bill: Bill) {
