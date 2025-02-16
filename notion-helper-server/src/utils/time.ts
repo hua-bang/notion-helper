@@ -1,12 +1,5 @@
-import * as utc from 'dayjs/plugin/utc';
 import * as dayjs from 'dayjs';
 import { TimeType } from './../notion/constants/index';
-import * as timezone from 'dayjs/plugin/timezone';
-
-// 在应用启动时设置
-dayjs.extend(utc);
-dayjs.extend(timezone);
-dayjs.tz.setDefault('Asia/Shanghai'); // 或者你所在的时区
 
 /**
  * 根据 TimeType 获取时间范围
@@ -18,39 +11,32 @@ export function getTimeRangeByTimeType(
   timeType: TimeType,
   baseTime: number | string = Date.now(),
 ) {
-  // 确保使用上海时区处理时间
-  const baseDate = dayjs.tz(baseTime, 'Asia/Shanghai');
+  const baseDate = new Date(baseTime);
+  const year = baseDate.getFullYear();
+  const month = baseDate.getMonth();
+  const date = baseDate.getDate();
+  const day = baseDate.getDay();
 
   switch (timeType) {
     case TimeType.Day:
-      const startOfDay = baseDate.startOf('day');
-      const endOfDay = baseDate.endOf('day');
+      // 整体返回当天的时间范围， end 需要减 1 秒
       return {
-        start: startOfDay.valueOf(),
-        end: endOfDay.valueOf(),
+        start: new Date(year, month, date).getTime(),
+        end: new Date(year, month, date + 1).getTime() - 1,
       };
     case TimeType.Week:
       // 整体返回当周的时间范围， end 需要减 1 秒
       return {
         // date - day 表示当天是周几，减去 day 就是本周的第一天
         // date - day + 7 表示本周的最后一天
-        start: new Date(
-          baseDate.year(),
-          baseDate.month(),
-          baseDate.date() - baseDate.day(),
-        ).getTime(),
-        end:
-          new Date(
-            baseDate.year(),
-            baseDate.month(),
-            baseDate.date() - baseDate.day() + 7,
-          ).getTime() - 1,
+        start: new Date(year, month, date - day).getTime(),
+        end: new Date(year, month, date - day + 7).getTime() - 1,
       };
     case TimeType.Month:
       // 整体返回当月的时间范围， end 需要减 1 秒
       return {
-        start: new Date(baseDate.year(), baseDate.month(), 1).getTime(),
-        end: new Date(baseDate.year(), baseDate.month() + 1, 1).getTime() - 1,
+        start: new Date(year, month, 1).getTime(),
+        end: new Date(year, month + 1, 1).getTime() - 1,
       };
     default:
       return {
@@ -71,15 +57,9 @@ export function getISO8601TimeRangeByTimeType(
 ) {
   const { start, end } = getTimeRangeByTimeType(timeType, baseTime);
 
-  // 使用 dayjs 直接格式化为 ISO 字符串，保持时区
-  const startStr = dayjs(start)
-    .tz('Asia/Shanghai')
-    .format('YYYY-MM-DDTHH:mm:ssZ');
-  const endStr = dayjs(end).tz('Asia/Shanghai').format('YYYY-MM-DDTHH:mm:ssZ');
-
   return {
-    start: startStr,
-    end: endStr,
+    start: formatToISO8601(new Date(start)),
+    end: formatToISO8601(new Date(end)),
   };
 }
 
