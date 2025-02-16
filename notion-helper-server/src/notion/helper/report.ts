@@ -137,7 +137,17 @@ const generateTaskItemInfoContent = (taskItem: TaskTypeGroup) => {
           type: 'table_row',
           table_row: {
             cells: [
-              [{ type: 'text', text: { content: task.name } }],
+              [
+                {
+                  type: 'text',
+                  text: {
+                    content: task.name,
+                    link: {
+                      url: task.notionUrl,
+                    },
+                  },
+                },
+              ],
               [
                 {
                   type: 'text',
