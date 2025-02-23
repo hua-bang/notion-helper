@@ -2,7 +2,7 @@ name: Deploy Notion Helper
 
 on:
   push:
-    branches: [main] # 修改为你的主分支名称
+    branches: [master] # 修改为你的主分支名称
 
 jobs:
   deploy:
@@ -21,7 +21,7 @@ jobs:
         run: |
           ssh -i ~/.ssh/id_rsa ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "
             cd /root/project/notion-helper &&
-            git pull origin main &&
+            git pull origin master &&
             echo '${{ secrets.ENV_FILE }}' > .env &&
             docker-compose down &&
             docker-compose up -d --build notion-helper-server
