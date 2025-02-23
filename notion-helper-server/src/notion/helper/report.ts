@@ -72,7 +72,7 @@ export const generateReport = (reportInfo: TaskReport, billInfo: BillInfo) => {
         rich_text: [
           {
             type: 'text',
-            text: { content: '⛽️ Summary' },
+            text: { content: '🤔 Summary' },
           },
         ],
       },
