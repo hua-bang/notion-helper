@@ -274,13 +274,13 @@ const generateBillInfoContent = (billInfo: BillInfo) => {
       rich_text: [
         {
           type: 'text',
-          text: { content: `${type}: ` },
+          text: { content: `${type}:  ` },
           annotations: { bold: true },
         },
         {
           type: 'text',
           text: {
-            content: `${total >= 0 ? '¥' : '-¥'}${Math.abs(total).toFixed(2)}`,
+            content: `${total >= 0 ? '¥' : '-¥'}${Math.abs(total).toFixed(2)}(${((total / billInfo.billNum) * 100).toFixed(2)}%)`,
           },
         },
       ],
