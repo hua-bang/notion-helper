@@ -3,6 +3,7 @@ import { TaskReport, TaskTypeGroup } from '../interfaces/task';
 import * as dayjs from 'dayjs';
 import { formatSecondsToTime, isSameDay } from 'src/utils/time';
 import { BillInfo, IncomeAndExpenditureType } from '../interfaces/bill';
+import { getTOCElement } from '../elements/get-toc-element';
 
 /**
  * 生成报告
@@ -106,12 +107,14 @@ export const generateReport = (reportInfo: TaskReport, billInfo: BillInfo) => {
     },
   ];
 
-  const billInfoTableContent = generateBillInfoContent(billInfo);
+  const billInfoContent = generateBillInfoContent(billInfo);
 
   const children: any = [
+    // 添加单个 TOC 节点
+    getTOCElement(),
     ...summaryContent,
     ...taskInfoContent,
-    ...billInfoTableContent,
+    ...billInfoContent,
   ];
 
   return {
@@ -253,9 +256,46 @@ const generateBillInfoContent = (billInfo: BillInfo) => {
     },
   };
 
+  // 新增：按类型统计金额（支持多类型）
+  const typeSummary = Object.entries(
+    billInfo.list.reduce(
+      (acc, item) => {
+        item.types.forEach((type) => {
+          acc[type] = (acc[type] || 0) + item.amount;
+        });
+        return acc;
+      },
+      {} as Record<string, number>,
+    ),
+  ).map(([type, total]) => ({
+    object: 'block',
+    type: 'bulleted_list_item',
+    bulleted_list_item: {
+      rich_text: [
+        {
+          type: 'text',
+          text: { content: `${type}: ` },
+          annotations: { bold: true },
+        },
+        {
+          type: 'text',
+          text: {
+            content: `${total >= 0 ? '¥' : '-¥'}${Math.abs(total).toFixed(2)}`,
+          },
+        },
+      ],
+    },
+  }));
+
   const billInfoTableContent = generateBillListTable(billInfo);
 
-  const billInfoContent = [billTitleBlock, billInfoTableContent];
+  const billInfoContent = [
+    billTitleBlock,
+    // 添加分类统计区块
+    ...typeSummary,
+    // 原有表格内容
+    billInfoTableContent,
+  ];
 
   return billInfoContent;
 };
