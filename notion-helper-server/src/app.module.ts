@@ -4,11 +4,12 @@ import { AppService } from './app.service';
 import { NotionModule } from './notion/notion.module';
 import { config } from 'dotenv';
 import { LoggerMiddleware } from './common/middlewares/LoggerMiddleware';
+import { CozeModule } from './coze/coze.module';
 
 config();
 
 @Module({
-  imports: [NotionModule],
+  imports: [NotionModule, CozeModule],
   controllers: [AppController],
   providers: [AppService],
 })

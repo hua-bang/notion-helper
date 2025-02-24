@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Client } from '@notionhq/client';
-import { Bill } from './interfaces/bill';
+import { Bill, BillInfo } from './interfaces/bill';
 import { Todo } from './interfaces/todo';
 import { Note } from './interfaces/note';
 import { markdownToBlocks } from '@tryfabric/martian';
@@ -22,6 +22,7 @@ import { generateReport } from './helper/report';
 import { TaskReport } from './interfaces/task';
 import { GetBillListDto } from './dto/get-bill-list.dto';
 import { transformBillListToBillInfo } from './helper/bill';
+import { CozeService } from 'src/coze/coze.service';
 
 @Injectable()
 export class NotionService {
@@ -35,7 +36,7 @@ export class NotionService {
   private readonly notionWeeklyReportDatabaseId =
     process.env.NOTION_WEEKLY_REPORT_DATABASE_ID;
 
-  constructor() {
+  constructor(private readonly cozeService: CozeService) {
     this.notionClient = new Client({
       auth: process.env.NOTION_API_KEY,
     });
@@ -316,10 +317,47 @@ export class NotionService {
     return res;
   }
 
+  async getLLMAnalysis(reportInfo: TaskReport, billInfo: BillInfo) {
+    const { dateRange } = reportInfo;
+    const { startISO8601, endISO8601 } = dateRange;
+    try {
+      const response = await this.cozeService.runWorkFlow({
+        workflow_id: process.env.COZE_REPORT_WORKFLOW_ID,
+        parameters: {
+          tasks: reportInfo,
+          billInfo,
+          start_date: startISO8601,
+          end_date: endISO8601,
+        },
+      });
+
+      const { data } = response;
+
+      const { output, think } = JSON.parse(data);
+
+      return {
+        output,
+        think,
+      };
+    } catch (error) {
+      console.error('LLM Analysis failed:', error);
+      return null;
+    }
+  }
+
   async addReport(dataBaseId: string, params: CreateReportDto) {
     const reportInfo = await this.getTaskReport(params);
     const billInfo = await this.getBillInfo(params);
     const { properties, children } = generateReport(reportInfo, billInfo);
+    const llmResponse = await this.getLLMAnalysis(reportInfo, billInfo);
+
+    if (llmResponse) {
+      // 把 llm 和 think 添加到 children 中
+      const { output, think } = llmResponse;
+      const outputBlock = markdownToBlocks(output);
+      const thinkBlock = markdownToBlocks(think);
+      children.push(...outputBlock, ...thinkBlock);
+    }
 
     return this.notionClient.pages.create({
       parent: {
