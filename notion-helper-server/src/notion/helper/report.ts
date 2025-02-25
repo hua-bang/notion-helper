@@ -10,7 +10,10 @@ import { getTOCElement } from '../elements/get-toc-element';
  * @param reportInfo
  * @returns
  */
-export const generateReport = (reportInfo: TaskReport, billInfo: BillInfo) => {
+export const generateReport = (
+  reportInfo: TaskReport,
+  billInfo: BillInfo | undefined,
+) => {
   const timeStartStr = dayjs(reportInfo.dateRange.start).format('YYYY-MM-DD');
   const timeEndStr = dayjs(reportInfo.dateRange.end).format('YYYY-MM-DD');
 
@@ -27,7 +30,7 @@ export const generateReport = (reportInfo: TaskReport, billInfo: BillInfo) => {
     list = [],
   } = reportInfo;
 
-  const { billNum } = billInfo;
+  const { billNum } = billInfo || {};
 
   const properties: Record<string, any> = {
     // 标题属性 - 使用日期作为标题
@@ -99,7 +102,9 @@ export const generateReport = (reportInfo: TaskReport, billInfo: BillInfo) => {
           {
             type: 'text',
             text: {
-              content: `💰 经济开销为:  ${billNum}（开销为：${billInfo.expenditure}, 收入为 ${billInfo.income}）`,
+              content: billInfo
+                ? `💰 经济开销为：${billNum}（开销为：${billInfo.expenditure}, 收入为 ${billInfo.income}）`
+                : '💰 经济开销为：进入暂无开销',
             },
           },
         ],
@@ -107,7 +112,7 @@ export const generateReport = (reportInfo: TaskReport, billInfo: BillInfo) => {
     },
   ];
 
-  const billInfoContent = generateBillInfoContent(billInfo);
+  const billInfoContent = billInfo ? generateBillInfoContent(billInfo) : [];
 
   const children: any = [
     // 添加单个 TOC 节点
